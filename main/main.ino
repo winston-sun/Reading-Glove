@@ -80,7 +80,7 @@ state_E currState = IDLE; //set default current state to be IDLE
 volatile input_E input = NONE;
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   while (!Serial);
 
   pinMode(TrigPin, OUTPUT);
