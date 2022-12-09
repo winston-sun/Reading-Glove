@@ -3,7 +3,7 @@
 #define TrigPin 6
 #define EchoPin 5
 
-int Value_cm;
+int value_cm;
 
 void setup()
 {
@@ -11,22 +11,16 @@ void setup()
   pinMode(TrigPin, OUTPUT);
   pinMode(EchoPin, INPUT);
 }
-int oldval;
+int oldval = 0;
 void loop()
 {
 
-  Value_cm=getddistance(TrigPin,EchoPin); 
- //Serial.println(Value_cm);
+  value_cm = getdistance(TrigPin,EchoPin); 
 
-  if(Value_cm/10!=oldval)
-  {
-     oldval=Value_cm/10;
-     Serial.println("photograph");
-  }
- delay(100);
+  
 }
 
-float getddistance(int Trig,int Echo)
+float getdistance(int Trig,int Echo)
 {
   pinMode(TrigPin, OUTPUT);
   pinMode(EchoPin, INPUT);

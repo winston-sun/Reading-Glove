@@ -1,3 +1,9 @@
+#include <TinyMLShield.h>
+#include <TensorFlowLite.h>
+
+#include <TinyMLShield.h>
+#include <TensorFlowLite.h>
+
 /*
   based on tinyMLx - OV7675 Camera Test
 */
@@ -88,12 +94,13 @@ void CameraHandler(void)
         //image_send[index++] = static_cast<int8_t>(data[(y * 176) + x] - 128); // convert TF input image to signed 8-bit
       }
     }
-    int a = (index-1)/8;
-    Serial.print(a);
-    Serial.print("\n");
+    //int a = (index-1)/8;
+    //Serial.print(a);
+    //Serial.print("\n");
     //delay(3000);
     for (int i = 0; i < 90 * 88 / 8; i++) {
-      //Serial.print("0x");
+      //printf("%02x", image_send[i]);
+      Serial.print(image_send[i] < 16 ? "0" : "");
       Serial.print(image_send[i], HEX);
     }
     input = CAPTURED;
@@ -125,23 +132,23 @@ void BLEHandler(void) {
     if (imageCharacteristic.writeValue(image_seg1, half_len) == 1) {
         Serial.print("\n1 Success");
     }
-    delay(1000);
+    delay(500);
     if (imageCharacteristic.writeValue(image_seg2, half_len)) {
         Serial.print("\n2 Success");
     }
-    delay(1000);
+    delay(500);
     if (imageCharacteristic.writeValue(image_seg3, half_len)) {
         Serial.print("\n3 Success");
     }
-    delay(1000);
+    delay(500);
     if (imageCharacteristic.writeValue(image_seg4, half_len)) {
         Serial.print("\n4 Success");
     }
-    delay(1000);
+    delay(500);
     if (imageCharacteristic.writeValue(image_seg5, half_len)) {
         Serial.print("\n5 Success");
     }
-    delay(1000);
+    delay(500);
     if (imageCharacteristic.writeValue(image_seg6, half_len)) {
         Serial.print("\n6 Success");
     }
