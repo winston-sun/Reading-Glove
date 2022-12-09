@@ -7,6 +7,8 @@
 
 #include <TinyMLShield.h>
 #include <ArduinoBLE.h>
+#include <Arduino_LSM9DS1.h>
+
 
 const int ledPin = LED_BUILTIN; // set ledPin to on-board LED
 const int buttonPin = 4; // set buttonPin to digital pin 4
@@ -18,6 +20,9 @@ const int buttonPin = 4; // set buttonPin to digital pin 4
 int value_cm;
 int oldval;
 
+float x, y, z;
+bool orientation = false; // 0 - facing up; 1 - facing down;
+bool stable = false; // 0 - not stable; 1 - stable;
 
 bool commandRecv = false; // flag used for indicating receipt of commands from serial port
 bool liveFlag = false; // flag as true to live stream raw camera bytes, set as false to take single images on command
@@ -64,7 +69,12 @@ void setup() {
   // begin initialization
   if (!BLE.begin()) {
     Serial.println("starting BLE failed!");
+    while (1);
+  }
 
+  // Initialize IMU
+  if (!IMU.begin()) {
+    Serial.println("Failed to initialize IMU");
     while (1);
   }
 
@@ -102,15 +112,41 @@ void setup() {
 
 void loop() {
   // poll for Bluetooth® Low Energy events
-  //BLE.poll();
+  BLE.poll();
 
   long currentMillis = millis();
+
+  bool clicked = readShieldButton();
+  if (clicked) {
+    if (!captureFlag) {
+      captureFlag = true;
+    }
+  }
   
   value_cm = getdistance(TrigPin,EchoPin);
+
+  if (IMU.accelerationAvailable()) {
+    IMU.readAcceleration(x, y, z);
+    if (z > -1.1 && z < -0.85) {
+      orientation = true;
+    }
+    else {
+      orientation = false;
+      Serial.println("\nNot facing down");
+    }
+
+    if (x > -0.2 && x < 0.2 && y > -0.2 && y < 0.2) {
+      stable = true;
+    }
+    else {
+      stable = false;
+      Serial.println("\nNot stable");
+    }
+  }
   
   
-  // if 200ms have passed, check the battery level:
-  if (currentMillis - previousMillis >= 200 && value_cm < 26) {
+  // if 100ms have passed, check the battery level:
+  if ((currentMillis - previousMillis >= 100) && value_cm < 26 && orientation && stable && captureFlag) {
     previousMillis = currentMillis;
     Camera.readFrame(image);
     Serial.println("\nImage capture...");
