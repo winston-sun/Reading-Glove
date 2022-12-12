@@ -17,8 +17,10 @@ const int buttonPin = 4; // set buttonPin to digital pin 4
 #define TrigPin 6
 #define EchoPin 5
 
-#define WIDTH 176
-#define HEIGHT 100
+#define WIDTH_CROPPED 220
+#define HEIGHT_CROPPED 100
+
+
 
 int value_cm;
 int oldval;
@@ -31,15 +33,21 @@ bool commandRecv = false; // flag used for indicating receipt of commands from s
 bool liveFlag = false; // flag as true to live stream raw camera bytes, set as false to take single images on command
 bool captureFlag = false;
 
+int res = QVGA; // 320x240
+int format = GRAYSCALE;
+int img_height = 240;
+int img_width = 320;
+int fps = 1;
+
 // Image buffer;
-byte image[176 * 144 * 2]; // QCIF: 176x144 x 2 bytes per pixel (RGB565)
-byte image_greyscale[176 * 144]; // QCIF: 176x144 x 1 bytes per pixel (Greyscale)
-int8_t image_sent[WIDTH * HEIGHT];
-bool grayscale = true;
-//int min_x = (176 - 100) / 2;
-//int min_y = (144 - 100) / 2;
+//byte image[img_width * img_height * 2]; // QCIF: 176x144 x 2 bytes per pixel (RGB565)
+byte image_grayscale[320 * 240]; // QCIF: 176x144 x 1 bytes per pixel (Grayscale)
+int8_t image_sent[WIDTH_CROPPED * HEIGHT_CROPPED];
+bool grayscale = (format == GRAYSCALE);
 int bytesPerFrame;
 long previousMillis = 0;  // last time the battery level was checked, in ms
+
+
 
 BLEService imgService("19B10010-E8F2-537E-4F6C-D104768A1214"); // create service
 
@@ -90,13 +98,13 @@ void setup() {
 
   // Initialize the OV7675 camera
   if (!grayscale) {
-    if (!Camera.begin(QCIF, RGB565, 1, OV7675)) {
+    if (!Camera.begin(res, format, fps, OV7675)) {
       Serial.println("Failed to initialize camera");
       while (1);
     }
   }
   else {
-    if (!Camera.begin(QCIF, GRAYSCALE, 1, OV7675)) {
+    if (!Camera.begin(res, GRAYSCALE, fps, OV7675)) {
       Serial.println("Failed to initialize camera");
       while (1);
     }
@@ -139,9 +147,9 @@ void setup() {
   countCharacteristic.writeValue(0);
   widthCharacteristic.writeValue(Camera.width());
   heightCharacteristic.writeValue(Camera.height());
-  resCharacteristic.writeValue(QCIF);
-  formatCharacteristic.writeValue(RGB565);
-  fpsCharacteristic.writeValue(1);
+  resCharacteristic.writeValue(res);
+  formatCharacteristic.writeValue(format);
+  fpsCharacteristic.writeValue(fps);
 
   BLE.advertise();
 
@@ -151,6 +159,9 @@ void setup() {
 void loop() {
   // poll for Bluetooth® Low Energy events
   BLE.poll();
+  res = resCharacteristic.value();
+  format = formatCharacteristic.value();
+  fps = fpsCharacteristic.value();
 
   long currentMillis = millis();
 
@@ -188,6 +199,7 @@ void loop() {
     previousMillis = currentMillis;
     
     if(!grayscale) {
+      /*
       Camera.readFrame(image);
       Serial.println("\nImage capture...");
       //delay(3000);
@@ -202,23 +214,24 @@ void loop() {
         }
       }
       Serial.println();
+      */
     }
     else {
-      Camera.readFrame(image_greyscale);
+      Camera.readFrame(image_grayscale);
       Serial.println("\nImage capture...");
       
-      int min_x = (176 - WIDTH) / 2;
-      int min_y = (144 - HEIGHT) / 2;
+      int min_x = (img_width - WIDTH_CROPPED) / 2;
+      int min_y = (img_height - HEIGHT_CROPPED) / 2;
       int index = 0;
 
       // Crop 120x100 image. This lowers FOV, ideally we would downsample but this is simpler. 
-      for (int y = min_y; y < min_y + HEIGHT; y++) {
-        for (int x = min_x; x < min_x + WIDTH; x++) {
-          image_sent[index++] = static_cast<int8_t>(image_greyscale[(y * 176) + x] - 128); // convert TF input image to signed 8-bit
+      for (int y = min_y; y < min_y + HEIGHT_CROPPED; y++) {
+        for (int x = min_x; x < min_x + WIDTH_CROPPED; x++) {
+          image_sent[index++] = static_cast<int8_t>(image_grayscale[(y * img_width) + x] - 128); // convert TF input image to signed 8-bit
         }
       }
       
-      for (int i = 0; i < WIDTH*HEIGHT; i ++) {
+      for (int i = 0; i < WIDTH_CROPPED*HEIGHT_CROPPED; i ++) {
         Serial.print(image_sent[i]);
         Serial.print(", ");
       }
@@ -243,11 +256,11 @@ float getdistance(int Trig,int Echo)
 
 void CameraHandler(void)
 {
-    int min_x = (176 - 90) / 2;
-    int min_y = (144 - 90) / 2;
+    int min_x = (img_width - 90) / 2;
+    int min_y = (img_height - 90) / 2;
     int index = 0;
 
-    Camera.readFrame(image);
+    Camera.readFrame(image_grayscale);
     //Serial.println("\nImage data will be printed out in 3 seconds...");
     Serial.println("\nImage captured");
 
@@ -257,13 +270,13 @@ void CameraHandler(void)
     int i = 0;
 
     // Crop 120x100 image. This lowers FOV, ideally we would downsample but this is simpler. 
-    for (int y = min_y; y < min_y + HEIGHT; y++) {
-      for (int x = min_x; x < min_x + WIDTH; x++) {
-        image_sent[index++] = static_cast<int8_t>(image[(y * 176) + x] - 128); // convert TF input image to signed 8-bit
+    for (int y = min_y; y < min_y + HEIGHT_CROPPED; y++) {
+      for (int x = min_x; x < min_x + WIDTH_CROPPED; x++) {
+        image_sent[index++] = static_cast<int8_t>(image_grayscale[(y * img_width) + x] - 128); // convert TF input image to signed 8-bit
       }
     }
     
-    for (int i = 0; i < WIDTH*HEIGHT; i ++) {
+    for (int i = 0; i < WIDTH_CROPPED*HEIGHT_CROPPED; i ++) {
       Serial.print(image_sent[i]);
       Serial.print(", ");
     }
