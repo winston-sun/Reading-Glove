@@ -5,4 +5,4 @@ Currently, visually-impaired individuals rely on alternatives like Braille to re
 The glove setup and image capture is implemented on an Arduino Nano BLE 33 attached to the glove as well as via BLE, and the image processing and output is done via a laptop. 
 
 
-![Alt text](block_diagram.jpg?raw=true "Title")
+![Alt text](block_diagram.png?raw=true "Title")
