@@ -6,3 +6,4 @@ The glove setup and image capture is implemented on an Arduino Nano BLE 33 attac
 
 
 ![Alt text](block_diagram.png?raw=true "Title")
+![Alt text](Reading_Glove_Poster.pdf?raw=true "Title")
