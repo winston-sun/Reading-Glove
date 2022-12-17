@@ -1,4 +1,4 @@
-# embedded_system_design
+# Reading Glove
 
 Currently, visually-impaired individuals rely on alternatives like Braille to read text. Thus, for any poster or sign, unless there is Braille infrastructure attached, visually-impaired individuals are generally unable to read what is on them. In this project, we alter an alternative to these individuals that is much more generalizable by designing and prototyping “reading” gloves – essentially gloves with a camera attached on the palm that can be used to read text from the camera input and output the text to speech.
 
